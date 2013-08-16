@@ -21,6 +21,7 @@
 #include <Servo.h>
 #else
 #include <Servo/Servo.h>
+#endif
 #endif /* defined(ARDUINO) */
 
 #if defined(BOARD_GRSAKURA)
