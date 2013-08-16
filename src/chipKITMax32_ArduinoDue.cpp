@@ -10,6 +10,7 @@
 
 
 
+#if defined(ARDUINO)
 #if (ARDUINO >= 100)
 	#include <Arduino.h>
 #else
@@ -20,7 +21,13 @@
 #include <Servo.h>
 #else
 #include <Servo/Servo.h>
-#endif
+#endif /* defined(ARDUINO) */
+
+#if defined(BOARD_GRSAKURA)
+	#include <rxduino.h>
+	#include <Servo.h>
+	typedef uint8_t byte;
+#endif /* defined(BOARD_GRSAKURA) */
 
 mrb_value mrb_serial_available(mrb_state *mrb, mrb_value self){
   return mrb_fixnum_value(Serial.available());
@@ -109,7 +116,7 @@ mrb_value mrb_arduino_analogReference(mrb_state *mrb, mrb_value self){
   mrb_int type;
   mrb_get_args(mrb, "i", &type);
 
-#if defined(MPIDE)
+#if defined(MPIDE) || defined(BOARD_GRSAKURA)
   analogReference(type);
 #else
   analogReference((eAnalogReference)type);
@@ -132,7 +139,7 @@ mrb_value mrb_arduino_analogRead(mrb_state *mrb, mrb_value self){
   return mrb_fixnum_value(val);
 }
 
-#if defined(MPIDE)
+#if defined(MPIDE) || defined(BOARD_GRSAKURA)
 
 mrb_value mrb_arduino_tone(mrb_state *mrb, mrb_value self){
   mrb_int pin, frequency, duration;
@@ -168,7 +175,11 @@ mrb_value mrb_arduino_shiftOut(mrb_state *mrb, mrb_value self){
 mrb_value mrb_arduino_shiftIn(mrb_state *mrb, mrb_value self){
   mrb_int dataPin, clockPin, bitOrder;
   mrb_get_args(mrb, "iii", &dataPin, &clockPin, &bitOrder);
+#if defined(BOARD_GRSAKURA)
+  return mrb_fixnum_value(shiftIn(dataPin, clockPin, (SPI_BIT_ORDER)bitOrder));
+#else
   return mrb_fixnum_value(shiftIn(dataPin, clockPin, bitOrder));
+#endif /* defined(BOARD_GRSAKURA) */
 }
  
 mrb_value mrb_arduino_pulseIn(mrb_state *mrb, mrb_value self){
@@ -265,7 +276,7 @@ mruby_arduino_init_chipKIT_or_Due(mrb_state* mrb) {
   mrb_define_module_function(mrb, arduinoModule, "analogReference", mrb_arduino_analogReference, ARGS_REQ(1));
   mrb_define_module_function(mrb, arduinoModule, "analogWrite", mrb_arduino_analogWrite, ARGS_REQ(2));
   mrb_define_module_function(mrb, arduinoModule, "analogRead", mrb_arduino_analogRead, ARGS_REQ(1));
-#if defined(MPIDE) 
+#if defined(MPIDE) || defined(BOARD_GRSAKURA)
   mrb_define_module_function(mrb, arduinoModule, "tone", mrb_arduino_tone, ARGS_REQ(2) | ARGS_OPT(1));
   mrb_define_module_function(mrb, arduinoModule, "noTone", mrb_arduino_noTone, ARGS_REQ(1));
 #endif
